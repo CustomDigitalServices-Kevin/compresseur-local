@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { stat } from "node:fs/promises";
+import { PDFDocument } from "pdf-lib";
 import { ensureFixtures } from "./fixtures";
 import {
   addFile,
@@ -54,4 +55,53 @@ test("still compresses after a reload with the network cut", async ({ page, cont
   // Offline output must match the online one byte for byte: same codec, same
   // settings, served from cache.
   expect(offline.bytes.length).toBe(online.bytes.length);
+});
+
+/**
+ * Same proof for the PDF family, which loads by far the heaviest runtime-cached
+ * assets: pdf.worker.mjs (2.3 MB) and qpdf.wasm (1.2 MB). Neither is precached
+ * (shell-only precache, advisor decision), so this only works because the first
+ * online compression pulls them into the runtime cache. A user who goes offline
+ * without ever having compressed a PDF cannot compress one -- that is the
+ * documented trade-off, not a regression.
+ */
+test("still compresses a PDF after a reload with the network cut", async ({ page, context }) => {
+  const fixtures = await ensureFixtures();
+  const before = (await stat(fixtures.pdf)).size;
+
+  await openApp(page);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.ready;
+  });
+
+  // Online run: pulls pdf.worker.mjs and qpdf.wasm into the runtime cache.
+  await addFile(page, fixtures.pdf);
+  await waitForEstimate(page, "maximum");
+  await selectLevel(page, "maximum");
+  const online = await downloadResult(page);
+  expect(online.bytes.length).toBeLessThan(before);
+
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByTestId("dropzone")).toBeVisible();
+
+  const consoleErrors: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
+
+  await addFile(page, fixtures.pdf);
+  await waitForEstimate(page, "maximum");
+  await selectLevel(page, "maximum");
+  const offline = await downloadResult(page);
+  const gain = gainPercent(before, offline.bytes.length);
+  console.log(
+    `[e2e] PDF maximum OFFLINE: ${String(before)} -> ${String(offline.bytes.length)} bytes (${gain.toFixed(1)}% gain)`,
+  );
+
+  expect(consoleErrors, `console errors offline: ${consoleErrors.join(" | ")}`).toEqual([]);
+  expect(sniffFormat(offline.bytes)).toBe("pdf");
+  expect(offline.bytes.length).toBe(online.bytes.length);
+  const reopened = await PDFDocument.load(offline.bytes);
+  expect(reopened.getPageCount()).toBe(2);
 });
