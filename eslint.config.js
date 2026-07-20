@@ -40,6 +40,7 @@ export default tseslint.config(
         URL: "readonly",
         document: "readonly",
         WebAssembly: "readonly",
+        setTimeout: "readonly",
       },
     },
   },

@@ -1,8 +1,11 @@
 /**
  * Smoke test de production : compresse un vrai fichier sur le site en ligne.
  *
- * Verifie de bout en bout ce qu'aucun test local ne prouve : que le bundle
- * deploye compresse reellement, sans erreur console et sans requete sortante.
+ * Prouve ce qu'aucun test local ne peut prouver : que le bundle DEPLOYE
+ * compresse reellement, derriere la CSP et les types MIME du serveur de prod.
+ * Trois bugs de production invisibles en local ont ete trouves par ce script
+ * le 2026-07-20 (CSP sans wasm-unsafe-eval, code de sortie qpdf 3 rejete,
+ * .mjs servi en octet-stream).
  *
  * Usage :
  *   node scripts/smoke-prod.mjs "C:/chemin/vers/fichier.pdf"
@@ -58,41 +61,37 @@ console.log(`Fichier : ${basename(filePath)} (${(sizeBefore / 1024 / 1024).toFix
 await page.goto(url, { waitUntil: "networkidle" });
 await page.setInputFiles("input[type=file]", filePath);
 
-// Les trois niveaux se calculent en arriere-plan : on attend que les trois
-// pourcentages de gain soient affiches plutot qu'un delai arbitraire.
-// Signature Playwright : (fonction, argument, options). Sans le 2e argument,
-// les options seraient prises pour l'argument et le timeout par defaut (30 s)
-// s'appliquerait, trop court pour un gros PDF.
+// On attend la fin du calcul des trois niveaux, pas un simple compte de "%" :
+// le slogan "100% local" de la page en contient deja, et les niveaux se
+// calculent en sequence.
 await page.waitForFunction(
-  () => (document.body.innerText.match(/\d+([.,]\d+)?\s?%/g) || []).length >= 3,
+  () => !/Estimation des gains en cours|Estimating/i.test(document.body.innerText),
   null,
-  { timeout: 240_000 },
+  { timeout: 600_000 },
 );
 
-const results = await page.evaluate(() => {
-  const text = document.body.innerText;
-  return {
-    gains: text.match(/\d+([.,]\d+)?\s?%/g) || [],
-    hasEstimateBadge: /estimation/i.test(text),
-    excerpt: text.slice(0, 1500),
-  };
+// Les gains sont lus dans la carte du fichier (zone du selecteur de niveau),
+// jamais dans le texte marketing de la page.
+const levels = await page.evaluate(() => {
+  const out = [];
+  for (const el of document.querySelectorAll("button, [role=radio], label")) {
+    const txt = (el.textContent || "").replace(/\s+/g, " ").trim();
+    if (/^(Léger|Équilibré|Maximal)\b/.test(txt) && txt.length < 160) {
+      out.push(txt);
+    }
+  }
+  return out;
 });
 
-console.log("Extrait de la carte :\n" + results.excerpt + "\n");
-console.log("Pourcentages affiches :", results.gains.join("  "));
-console.log("Badge estimation :", results.hasEstimateBadge ? "oui" : "non (valeurs exactes)");
+console.log("Niveaux proposes :");
+for (const l of levels) console.log("  " + l);
 
 let downloaded = null;
-const maxButton = page.getByRole("button", { name: /maximal/i }).first();
-if (await maxButton.count()) {
-  await maxButton.click().catch(() => {});
-  await page.waitForTimeout(1500);
-}
-const dlButton = page.getByRole("button", { name: /télécharger|download/i }).first();
+const dlButton = page.locator('button:has-text("Télécharger"), a:has-text("Télécharger")').first();
 if (await dlButton.count()) {
   const [download] = await Promise.all([
-    page.waitForEvent("download", { timeout: 180_000 }).catch(() => null),
-    dlButton.click().catch(() => {}),
+    page.waitForEvent("download", { timeout: 300_000 }).catch(() => null),
+    dlButton.click({ timeout: 20_000 }).catch(() => {}),
   ]);
   if (download) {
     const target = `${process.env.TEMP || "/tmp"}/${download.suggestedFilename()}`;
@@ -118,7 +117,7 @@ if (downloaded) {
   console.log(`En-tete PDF valide : ${downloaded.isPdf ? "oui" : "NON"}`);
   console.log(`Copie locale : ${downloaded.path}`);
 } else {
-  console.log("Aucun telechargement declenche (bouton introuvable)");
+  console.log("Aucun telechargement declenche (bouton introuvable ou inactif)");
 }
 console.log(`Erreurs console : ${consoleErrors.length}`);
 console.log(`Erreurs page    : ${pageErrors.length}`);
