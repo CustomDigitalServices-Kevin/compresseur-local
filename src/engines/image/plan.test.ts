@@ -40,17 +40,29 @@ describe("imageSourceFormat", () => {
 
 describe("selectOutputMime", () => {
   it("honors an explicit convertFormat above everything else", () => {
-    expect(selectOutputMime("png", "jpeg")).toBe("image/jpeg");
-    expect(selectOutputMime("jpeg", "webp")).toBe("image/webp");
-    expect(selectOutputMime("png", "avif")).toBe("image/avif");
+    expect(selectOutputMime("png", "jpeg", "light")).toBe("image/jpeg");
+    expect(selectOutputMime("jpeg", "webp", "balanced")).toBe("image/webp");
+    expect(selectOutputMime("png", "avif", "maximum")).toBe("image/avif");
   });
 
-  it("keeps jpeg and webp, and re-encodes everything else to lossy webp", () => {
-    expect(selectOutputMime("jpeg", undefined)).toBe("image/jpeg");
-    expect(selectOutputMime("webp", undefined)).toBe("image/webp");
-    expect(selectOutputMime("png", undefined)).toBe("image/webp");
-    expect(selectOutputMime("avif", undefined)).toBe("image/webp");
-    expect(selectOutputMime("other", undefined)).toBe("image/webp");
+  it("re-encodes jpeg, webp and avif into their own format at every level", () => {
+    for (const level of ["light", "balanced", "maximum"] as const) {
+      expect(selectOutputMime("jpeg", undefined, level)).toBe("image/jpeg");
+      expect(selectOutputMime("webp", undefined, level)).toBe("image/webp");
+      expect(selectOutputMime("avif", undefined, level)).toBe("image/avif");
+    }
+  });
+
+  it("maps png to lossless png at light and to lossy webp at stronger levels", () => {
+    expect(selectOutputMime("png", undefined, "light")).toBe("image/png");
+    expect(selectOutputMime("png", undefined, "balanced")).toBe("image/webp");
+    expect(selectOutputMime("png", undefined, "maximum")).toBe("image/webp");
+  });
+
+  it("re-encodes unknown formats to lossy webp at every level", () => {
+    expect(selectOutputMime("other", undefined, "light")).toBe("image/webp");
+    expect(selectOutputMime("other", undefined, "balanced")).toBe("image/webp");
+    expect(selectOutputMime("other", undefined, "maximum")).toBe("image/webp");
   });
 });
 
