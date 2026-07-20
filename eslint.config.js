@@ -31,7 +31,16 @@ export default tseslint.config(
     files: ["scripts/**/*.mjs"],
     extends: [js.configs.recommended],
     languageOptions: {
-      globals: { process: "readonly", console: "readonly", URL: "readonly" },
+      // Ces scripts tournent sous Node, mais les callbacks passes a
+      // page.evaluate() sont serialises et executes DANS le navigateur : leurs
+      // globals (document, WebAssembly) sont donc legitimes ici.
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+        document: "readonly",
+        WebAssembly: "readonly",
+      },
     },
   },
 );

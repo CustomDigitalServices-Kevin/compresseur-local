@@ -47,6 +47,24 @@ export const QPDF_STRUCTURAL_ARGS: readonly string[] = [
   "--recompress-flate",
 ];
 
+/** qpdf: warnings were found without errors. The output file IS written. */
+export const QPDF_EXIT_WARNINGS = 3;
+
+/**
+ * qpdf exit codes: 0 = clean, 3 = warnings but no error (the output file IS
+ * written), 2 = errors, nothing usable produced.
+ * https://qpdf.readthedocs.io/en/stable/cli.html
+ *
+ * Real-world PDFs very often exit 3 (slightly non-conforming objects). Treating
+ * that as a failure made compression fail on most genuine documents -- caught
+ * in production on 2026-07-20, invisible to the pdf-lib fixtures which all
+ * exit 0. Output validity is still enforced downstream by the pdfjs reopen and
+ * the page-count check, as the qpdf docs warn that recovery is not guaranteed.
+ */
+export function isAcceptableQpdfExit(exitCode: number): boolean {
+  return exitCode === 0 || exitCode === QPDF_EXIT_WARNINGS;
+}
+
 /**
  * Creates a runner with a lazily-compiled, cached wasm module. Each run gets a
  * fresh Emscripten instance (cheap once compiled): qpdf mutates its MEMFS and
@@ -77,7 +95,7 @@ export function createQpdfRunner(loadWasm: QpdfWasmLoader): QpdfRun {
       const detail = error instanceof Error ? error.message : String(error);
       throw new CompressionError("internal-error", `qpdf crashed: ${detail}`);
     }
-    if (exitCode !== 0) {
+    if (!isAcceptableQpdfExit(exitCode)) {
       const tail = stderr.slice(-3).join(" | ");
       throw new CompressionError(
         "internal-error",
