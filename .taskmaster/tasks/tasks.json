@@ -1,0 +1,109 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Scaffold + noyau contrats (phase A, lead)",
+        "description": "Vite + React 19 + TS strict, repo git, CI licences allowlist (AGPL/LGPL interdits), contrats TypeScript CompressionProfile/CompressionJob/CompressionResult (avant/après/gain), infra Web Workers + registry par famille (image/pdf/office), pipeline estimation (compression réelle par niveau, échantillonnage >50 Mo), tests noyau.",
+        "details": "Pattern convertisseur-local T1+T2 : mêmes conventions (module-loaders lazy WASM, check-licenses.mjs, page Licences tierces verrouillée par test). Gotcha exports worker/browser (RAG Convertisseur Local/gotcha-worker-browser-exports). AVIF single-thread forcé.",
+        "testStrategy": "Vitest : contrats, registry, estimateur (extrapolation échantillon), CI licences rouge sur dep interdite simulée.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T05:47:14.970Z"
+      },
+      {
+        "id": "2",
+        "title": "Moteur compression images (teammate images)",
+        "description": "PNG/JPG/WebP/AVIF : ré-encodage @jsquash/* + Canvas natif, qualité 1-100, dimension max optionnelle, conversion de format optionnelle, mapping 3 presets, exécution en worker, résultats avant/après.",
+        "details": "Lazy-load par codec. AVIF encodeur single-thread (D8 convertisseur). PNG : oxipng @jsquash si dispo (Apache-2.0) sinon canvas re-encode. Préserver métadonnées d'orientation EXIF minimales.",
+        "testStrategy": "Vitest avec fixtures réelles par format : sortie plus petite au preset maximal, image décodable, dimensions respectées.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "3",
+        "title": "Moteur compression PDF (teammate pdf, plan-approval requis)",
+        "description": "Voie PAR DÉFAUT : pipeline maison pdfjs (extraction images embarquées) + pdf-lib (réinsertion), JS pur, + optimisation structurelle qpdf-wasm. pdfcpu WASM = fallback timeboxé 1j UNIQUEMENT si gain JS <30% sur PDF scanné, décision routée advisor avant poursuite.",
+        "details": "Gate advisor 2026-07-20 : pdfcpu images update (CLI) exige dimensions identiques + zéro alpha/softmask, incompatible downsampling ; pdfcomprezzor pilote la lib Go bas niveau (toolchain Go, non trivial pour teammate TS). Interdits : Ghostscript/MuPDF (AGPL). Critère : >30% de gain niveau maximal sur PDF scanné de test. Plan-approval natif obligatoire (complexité 8). Sources RAG Compresseur Local/compression-in-browser-libs (section limite CLI pdfcpu).",
+        "testStrategy": "Vitest + fixtures : PDF texte (gain structurel), PDF scanné (gain >30% max), PDF résultat valide (ré-ouvert par pdfjs, nombre de pages identique).",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "4",
+        "title": "Moteur compression Office PPTX/DOCX/XLSX (teammate office)",
+        "description": "Unzip fflate → détection médias (word/media, ppt/media, xl/media) → recompression images via moteur images (qualité/resize par niveau) → réécriture [Content_Types].xml si extension changée → re-zip niveau max.",
+        "details": "Ne jamais toucher au XML de contenu (sauf Content_Types si conversion format média). Conserver les médias non-image intacts. Garde .gdoc/pointeurs cloud (leçon convertisseur).",
+        "testStrategy": "Vitest fixtures : DOCX/PPTX/XLSX image-heavy compressés, ré-ouvrables (unzip valide, XML intact), gain mesuré ; fichier sans images = quasi no-op sans corruption.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "5",
+        "title": "UI premium + parcours estimation (teammate ui)",
+        "description": "Dropzone multi-fichiers, cartes par fichier avec taille avant/après et % de gain PAR niveau (calcul arrière-plan dès le dépôt), sélecteur 3 presets + panneau avancé, batch + téléchargement ZIP, i18n FR/EN, design aligné convertisseur v2, page Licences tierces.",
+        "details": "Réutiliser le langage visuel premium v2 du convertisseur (docs/design). Étiqueter 'estimation' les gains extrapolés (échantillonnage). Accessibilité : focus visibles, aria sur la progression. Pas de style inline barre de progression (gotcha D9 style-src-attr Safari).",
+        "testStrategy": "RTL : parcours dépôt→estimation→choix niveau→téléchargement, i18n switch, états erreur (fichier corrompu, format non supporté).",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "6",
+        "title": "Serveur MCP mcp-compress (teammate mcp)",
+        "description": "Package packages/mcp-compress dans tools/serveur-mcp/Serveur_MCP : tools list_compression_profiles, estimate_compression, compress_file (base64 in/out), stateless sans auth, Zod, limite taille entrée explicite, port 9015 (H3).",
+        "details": "Pattern mcp-devis/mcp-photo. PRÉ-LAUNCH LEAD : le lead crée la branche feat/mcp-compress dans le monorepo Serveur MCP AVANT le spawn (worktree auto cross-repo non applicable, cf feedback_agent_teams_worktree_isolation). Choix moteur serveur (réutilisation core WASM Node-safe vs deps Node dédiées type sharp) soumis à advisor pendant la tâche. Parité presets app/MCP : test de parité OU doc explicite de non-parité assumée (exigence advisor). Gotcha MCP base64 body limit (décodé x 4/3 + marge). Pas de déploiement dans cette tâche (fait en T7).",
+        "testStrategy": "Vitest unitaires par tool + e2e local handshake MCP + compress_file réel sur fixtures (image, PDF, DOCX), erreurs propres (fichier trop gros, format inconnu).",
+        "priority": "medium",
+        "dependencies": [
+          "1"
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": "7",
+        "title": "Finition, intégration, déploiement (phase C, lead)",
+        "description": "Merge branches, CSP stricte, PWA offline, E2E Playwright (compression réelle par famille + offline + zéro requête externe), repo GitHub privé→public, PR cds-site (vignette FR/EN + bundle vendorisé /outils/compresseur/ + doc MCP 4 locales), déploiement VPS mcp-compress (port, nginx, DNS additif, cert LE), smoke prod, gate advisor final.",
+        "details": "Ordre de merge EXPLICITE : pdf -> images -> office -> ui (mirroring D8 convertisseur), précédé d'un merge à blanc sur clone jetable validé advisor + suite complète. Plan-approval sur la phase deploy VPS (infra nginx/DNS partagée) + backup nginx.conf AVANT toute édition. Gotchas : tsconfig exclude public (D10), ACME webroot vs return 301 (mémoire nginx), vérifier port libre ss -tlnp, mcp-devis/mcp-photo non régressés, npm ci Linux wasm optional deps (mémoire lockfile Windows).",
+        "testStrategy": "Suite complète verte (Vitest + E2E), gates cds-site links/i18n, handshake MCP prod vérifié, smoke prod app (compression réelle dans Chromium prod, 0 erreur console).",
+        "priority": "high",
+        "dependencies": [
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2026-07-20T05:47:14.971Z",
+      "taskCount": 7,
+      "completedCount": 0,
+      "tags": [
+        "master"
+      ]
+    }
+  }
+}

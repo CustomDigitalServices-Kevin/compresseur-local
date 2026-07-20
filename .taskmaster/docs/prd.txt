@@ -1,0 +1,55 @@
+# PRD — Compresseur Local (+ mcp-compress)
+
+## Contexte
+
+Suite d'outils gratuits CDS (/outils/ sur custom-digital-services.COM). Le Convertisseur Local v2 (2026-07-18) a validé le pattern : app Vite + React 19 + TS strict + WASM, 100% local navigateur, MIT, repo GitHub public, bundle vendorisé sur cds-site. La compression PDF avait été exclue du convertisseur (D1) faute de voie non-AGPL ; la recherche 2026-07-20 (RAG Compresseur Local/compression-in-browser-libs) a levé le blocage.
+
+## Objectif global
+
+Livrer "Compresseur Local" : compression de fichiers 100% locale avec choix du niveau et estimation du gain AVANT téléchargement, plus un serveur MCP public gratuit associé (mcp-compress) dans le monorepo Serveur MCP.
+
+## Périmètre fonctionnel
+
+- Familles supportées : images (PNG, JPG, WebP, AVIF), PDF, PPTX, DOCX, XLSX.
+- Niveaux de compression : 3 presets (léger / équilibré / maximal) + réglages avancés (qualité image 1-100, dimension max, conversion de format optionnelle pour les images).
+- Estimation du gain : compression réelle exécutée en Web Worker dès le dépôt du fichier, affichage taille avant/après et % de gain PAR niveau avant que l'utilisateur télécharge ; pour fichiers volumineux, échantillonnage des N plus grosses images puis extrapolation étiquetée "estimation".
+- Traitement par lot (multi-fichiers), téléchargement unitaire ou ZIP.
+- 100% local : zéro requête réseau au traitement, CSP stricte, PWA offline (pattern convertisseur).
+- UI bilingue FR/EN, design premium aligné convertisseur v2, accessibilité de base.
+- Serveur MCP `mcp-compress` (monorepo tools/serveur-mcp/Serveur_MCP) : public, gratuit, stateless, sans auth, pattern mcp-devis (9009) / mcp-photo (9014). Tools : `list_compression_profiles`, `estimate_compression` (métadonnées + gain estimé), `compress_file` (base64 in/out). Limite de taille d'entrée explicite alignée sur la limite body du transport (gotcha : body = base64 décodé x 4/3 + marge, vérifier config VPS).
+- Intégration cds-site : vignette FR/EN sur /outils/, app sous /outils/compresseur/, doc MCP sous /outils/compresseur/mcp/ (4 locales, pattern mcp-photo).
+
+## Hors périmètre
+
+- Vidéo et audio (intenable 100% local, cohérent D1 convertisseur).
+- HEIC (LGPL + brevets HEVC, D2).
+- Compression PDF via Ghostscript/MuPDF (AGPL) : interdite.
+- OCR, édition de contenu, conversion de formats hors option image (c'est le rôle du convertisseur).
+- Compte utilisateur, quota, paiement.
+
+## Contraintes techniques
+
+- Stack : Vite + React 19 + TypeScript strict, Web Workers obligatoires, lazy-load par codec WASM, OPFS pour gros fichiers si nécessaire.
+- Licences : produit MIT ; AGPL interdit, LGPL bundlé interdit ; allowlist licences en CI + page "Licences tierces" verrouillée par test (pattern D14 convertisseur).
+- Libs pressenties (validées licence, RAG 2026-07-20) : @jsquash/* (Apache-2.0), Canvas natif, fflate (MIT, déjà validé advisor au convertisseur), @jspawn/qpdf-wasm (Apache-2.0), pour le PDF images embarquées : pdfcpu WASM (Apache-2.0) OU pipeline maison pdfjs+pdf-lib (Apache-2.0/MIT) — choix tranché en phase noyau après spike.
+- AVIF : encodeur single-thread forcé (gotcha D8 convertisseur, pas de SharedArrayBuffer garanti en statique).
+- Tests : Vitest unitaires + RTL, E2E Playwright avec compressions réelles par famille + offline PWA + zéro requête externe ; MCP : tests unitaires + e2e handshake/tools (pattern mcp-photo 40+8).
+- Serveur MCP : TypeScript 5.7 strict, Zod, @modelcontextprotocol/sdk du monorepo, port interne dédié (prochain libre après 9014), sous-domaine mcp-compress.custom-digital-services.com, nginx + certbot (gotcha ACME webroot vs return 301), déploiement VPS pattern mcp-devis/mcp-photo, mcp-devis et mcp-photo non régressés.
+- Repos : nouveau repo public `compresseur-local` (MIT) ; PR sur monorepo Serveur MCP ; PR cds-site (vignette + bundle vendorisé + tsconfig exclude public, gotcha D10).
+
+## Critères d'acceptation
+
+1. Chaque famille (image, PDF, PPTX, DOCX, XLSX) se compresse dans le navigateur avec les 3 niveaux, gain affiché avant téléchargement, fichier résultat valide (ré-ouvrable).
+2. PDF : gain mesurable sur un PDF scanné de test (>30% en niveau maximal) sans lib AGPL/LGPL au bundle (vérifié par allowlist CI).
+3. Zéro requête réseau pendant le traitement (E2E), PWA offline fonctionnelle.
+4. mcp-compress répond en prod : handshake MCP + 3 tools vérifiés sur https://mcp-compress.custom-digital-services.com/mcp, mcp-devis/mcp-photo intacts.
+5. Vignette FR/EN live sur /outils/, app accessible /outils/compresseur/, doc MCP publiée.
+6. Suites vertes : Vitest + E2E Playwright app, tests monorepo MCP, gates cds-site (links/i18n), zéro TODO/stub.
+
+## Hypothèses retenues (à challenger plus tard si erronées)
+
+- H1 : nom produit "Compresseur local", slug /outils/compresseur/, repo `web-apps/compresseur-local` (symétrie convertisseur, D7).
+- H2 : XLSX inclus dans la famille Office (l'intent dit "etc.") : même pipeline ZIP+médias, coût marginal faible.
+- H3 : port interne mcp-compress = 9015 (prochain après mcp-photo 9014), à confirmer par ss -tlnp sur le VPS avant déploiement.
+- H4 : l'estimation du gain = compression réelle par niveau en arrière-plan (fiable à 100%), échantillonnage seulement au-delà d'un seuil de taille (ex : 50 Mo) — pas de formule théorique.
+- H5 : repo GitHub créé privé pendant le dev, passé public à la publication (pattern D9/D10 convertisseur).
