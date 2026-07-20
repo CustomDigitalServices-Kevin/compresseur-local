@@ -1,4 +1,21 @@
-import initQpdf from "@jspawn/qpdf-wasm";
+// Imports the CJS Emscripten glue DIRECTLY instead of the package root.
+//
+// The package root resolves to qpdf.mjs, a wrapper that only works when
+// qpdf.js is evaluated as a classic script: it sets `globalThis.exports = {}`
+// (browser.js), lets the UMD tail of qpdf.js fall into its
+// `exports["Module"] = Module` branch, reads it back, and otherwise falls back
+// to a bare global `createModule`. Under Vite that wrapper is broken: Rollup
+// gives qpdf.js its own CJS `module`/`exports` bindings, so the UMD tail takes
+// the `module.exports = Module` branch instead, `globalThis.exports.Module`
+// stays undefined, and the fallback throws "createModule is not defined" in the
+// worker (caught by the E2E PDF smoke, 2026-07-20 -- Vitest never saw it
+// because Node takes qpdf.mjs's `require` branch, which does work).
+//
+// Importing qpdf.js directly takes the interop default export (= module.exports
+// = the factory) in BOTH environments, and as a bonus drops qpdf.mjs's dynamic
+// `import("path")`/`import("module")` calls -- the Node branches Vite used to
+// externalize with a warning.
+import initQpdf from "@jspawn/qpdf-wasm/qpdf.js";
 import { CompressionError } from "../../core/types";
 
 // Structural optimization pass behind a seam: qpdf (WASM CLI) repacks the

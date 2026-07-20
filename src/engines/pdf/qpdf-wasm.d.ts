@@ -1,8 +1,11 @@
 // Hand-written types for @jspawn/qpdf-wasm 0.0.2 (ships no .d.ts). The package
-// exposes the qpdf CLI compiled with Emscripten: a default-export factory that
-// resolves to a module with callMain + MEMFS. Only the surface used by
-// structural.ts is typed.
-declare module "@jspawn/qpdf-wasm" {
+// exposes the qpdf CLI compiled with Emscripten: a factory that resolves to a
+// module with callMain + MEMFS. Only the surface used by structural.ts is typed.
+//
+// The CJS glue (qpdf.js) is typed rather than the package root: see the import
+// comment in structural.ts for why the package's own qpdf.mjs wrapper cannot be
+// used in a bundled browser build.
+declare module "@jspawn/qpdf-wasm/qpdf.js" {
   export interface QpdfFileSystem {
     writeFile(path: string, data: Uint8Array): void;
     readFile(path: string): Uint8Array;
