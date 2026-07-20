@@ -56,6 +56,8 @@ export interface FixturePaths {
   jpeg: string;
   pdf: string;
   docx: string;
+  xlsx: string;
+  pptx: string;
 }
 
 /** Photo-sized source: big enough that the maximum preset's 1920px cap bites. */
@@ -77,6 +79,8 @@ export function ensureFixtures(): Promise<FixturePaths> {
       jpeg: join(outDir, "photo.jpg"),
       pdf: join(outDir, "scanned.pdf"),
       docx: join(outDir, "report.docx"),
+      xlsx: join(outDir, "book.xlsx"),
+      pptx: join(outDir, "deck.pptx"),
     };
 
     const photoPixels = synthScanPageRgba(PHOTO_DIMS, 42);
@@ -90,16 +94,27 @@ export function ensureFixtures(): Promise<FixturePaths> {
     if (!existsSync(paths.pdf)) {
       await writeFile(paths.pdf, await buildScannedPdfBytes({ pages: 2, imageDims: SCAN_DIMS }));
     }
-    if (!existsSync(paths.docx)) {
-      // A real, noisy q92 JPEG as the embedded photo: deflate cannot shrink it,
-      // so any gain reported by the office engine comes from re-encoding the
-      // image, not from the zip.
+    // A real, noisy q92 JPEG as the embedded photo: deflate cannot shrink it,
+    // so any gain reported by the office engine comes from re-encoding the
+    // image, not from the zip. The same photo goes into all three packages so
+    // their gains are directly comparable.
+    const officeTargets = [
+      { kind: "docx", path: paths.docx },
+      { kind: "xlsx", path: paths.xlsx },
+      { kind: "pptx", path: paths.pptx },
+    ] as const;
+    if (officeTargets.some((target) => !existsSync(target.path))) {
       const embedded = await encodeRgbaToJpeg(photoPixels, PHOTO_DIMS, 92);
-      const docx = buildOoxml("docx", {
-        media: { "image1.jpeg": embedded },
-        imageDefaults: ["jpeg", "png"],
-      });
-      await writeFile(paths.docx, docx);
+      for (const target of officeTargets) {
+        if (existsSync(target.path)) continue;
+        await writeFile(
+          target.path,
+          buildOoxml(target.kind, {
+            media: { "image1.jpeg": embedded },
+            imageDefaults: ["jpeg", "png"],
+          }),
+        );
+      }
     }
     return paths;
   })();
