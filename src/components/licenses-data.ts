@@ -13,4 +13,9 @@ export interface RuntimeLicenseEntry {
 
 export const RUNTIME_LICENSES: readonly RuntimeLicenseEntry[] = [
   { name: "react / react-dom", license: "MIT", covers: ["react", "react-dom"] },
+  // T3 (pdf engine). @jsquash/jpeg stays a devDependency (Node test codec only,
+  // never bundled) so it is intentionally NOT listed here.
+  { name: "pdf-lib", license: "MIT", covers: ["pdf-lib"] },
+  { name: "PDF.js", license: "Apache-2.0", covers: ["pdfjs-dist"] },
+  { name: "qpdf (WASM)", license: "Apache-2.0", covers: ["@jspawn/qpdf-wasm"] },
 ];
