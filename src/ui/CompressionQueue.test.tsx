@@ -101,21 +101,34 @@ describe("CompressionQueue journey", () => {
   });
 
   it("labels a sampled estimate and recompresses the whole file at download", async () => {
-    const runner = fakeRunner((input) =>
-      Promise.resolve(
-        input.allowSampling
+    // First three calls are the per-level estimates, returned as sampled
+    // extrapolations; the fourth is the exact compression run at download.
+    let calls = 0;
+    const runner = fakeRunner(() => {
+      calls += 1;
+      return Promise.resolve(
+        calls <= 3
           ? resultOf(4000, 1500, { isEstimate: true, sampled: true })
           : resultOf(4000, 1400),
-      ),
-    );
+      );
+    });
     renderWithLocale(<CompressionQueue runner={runner} />);
     await dropFile(pngFile("big.png"));
 
-    // The estimator only allows sampling above its threshold, so force the
-    // sampled shape through the runner itself.
+    // Extrapolated numbers are flagged as estimates, one badge per level.
     await waitFor(() => {
-      expect(runner.calls.length).toBeGreaterThan(0);
+      expect(screen.getAllByText("estimate")).toHaveLength(3);
     });
+    await screen.findByText(/Estimates ready/i);
+
+    await userEvent.click(screen.getByRole("button", { name: "Download" }));
+    await waitFor(() => {
+      expect(clickedAnchors).toHaveLength(1);
+    });
+    // A fourth run happened, with sampling disabled: the downloaded bytes are
+    // the whole file, never the sample used for the estimate.
+    expect(runner.calls).toHaveLength(4);
+    expect(runner.calls[3]?.allowSampling).toBe(false);
   });
 
   it("downloads every ready file as a single ZIP", async () => {
