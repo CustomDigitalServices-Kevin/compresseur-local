@@ -26,18 +26,12 @@ describe("pdfMaxDimension", () => {
   });
 
   it("lets a stricter advanced maxDimension tighten the cap", () => {
-    expect(
-      pdfMaxDimension({ level: "maximum", imageQuality: 55, maxDimension: 800 }),
-    ).toBe(800);
-    expect(
-      pdfMaxDimension({ level: "light", imageQuality: 85, maxDimension: 800 }),
-    ).toBe(800);
+    expect(pdfMaxDimension({ level: "maximum", imageQuality: 55, maxDimension: 800 })).toBe(800);
+    expect(pdfMaxDimension({ level: "light", imageQuality: 85, maxDimension: 800 })).toBe(800);
   });
 
   it("ignores a looser advanced maxDimension", () => {
-    expect(
-      pdfMaxDimension({ level: "balanced", imageQuality: 75, maxDimension: 4000 }),
-    ).toBe(1754);
+    expect(pdfMaxDimension({ level: "balanced", imageQuality: 75, maxDimension: 4000 })).toBe(1754);
   });
 
   it("returns undefined when neither the level nor the profile caps", () => {
