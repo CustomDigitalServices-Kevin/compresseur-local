@@ -95,6 +95,10 @@ function pwa(): Plugin[] {
     workbox: {
       // Shell only. Note .wasm and .mjs are absent by design (see above).
       globPatterns: ["**/*.{js,css,html}"],
+      // Take control of the page as soon as the worker activates. Without it
+      // the first visit stays uncontrolled until the next navigation, so a
+      // reload right after the first load could miss the cache.
+      clientsClaim: true,
       runtimeCaching: [
         {
           // Content-hashed and immutable, so CacheFirst is safe: a rebuild
