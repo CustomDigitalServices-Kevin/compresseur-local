@@ -9,9 +9,9 @@
         "testStrategy": "Vitest : contrats, registry, estimateur (extrapolation échantillon), CI licences rouge sur dep interdite simulée.",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [],
-        "updatedAt": "2026-07-20T05:47:14.970Z"
+        "updatedAt": "2026-07-20T06:16:24.543Z"
       },
       {
         "id": "2",
@@ -23,8 +23,9 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:21:45.574Z"
       },
       {
         "id": "3",
@@ -36,8 +37,9 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:27:33.710Z"
       },
       {
         "id": "4",
@@ -49,8 +51,9 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:07:18.521Z"
       },
       {
         "id": "5",
@@ -62,8 +65,9 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:31:21.978Z"
       },
       {
         "id": "6",
@@ -75,8 +79,9 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:13:30.505Z"
       },
       {
         "id": "7",
@@ -92,15 +97,16 @@
           "5",
           "6"
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "in-progress",
+        "subtasks": [],
+        "updatedAt": "2026-07-20T07:31:23.602Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-07-20T05:47:14.971Z",
+      "lastModified": "2026-07-20T07:31:23.602Z",
       "taskCount": 7,
-      "completedCount": 0,
+      "completedCount": 6,
       "tags": [
         "master"
       ]

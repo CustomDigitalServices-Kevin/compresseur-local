@@ -10,12 +10,11 @@ import {
   selectOutputMime,
 } from "./plan";
 
-// Baseline image engine for T1. It compresses for real via a RasterCodec
-// (native OffscreenCanvas in production): decode, optional resize, re-encode to
-// a lossy target at the profile quality. It is NOT a stub -- it produces a
-// genuinely smaller file -- but it is deliberately minimal: T2 replaces it with
-// the @jsquash codecs (MozJPEG / OxiPNG / lossless WebP / AVIF) for better
-// ratios and true PNG-lossless support. The RasterCodec seam is what T2 swaps.
+// Image engine orchestration: profile -> encode plan (format, dimensions,
+// quality), real compression via a RasterCodec, and the sampled-estimate path
+// for large files. The pixel work is entirely behind the RasterCodec seam:
+// production wires the jSquash WASM codecs with a native-canvas fallback (see
+// module.ts), tests inject a deterministic fake.
 
 /** Above this size, estimate() samples a down-scaled copy and extrapolates. */
 export const DEFAULT_SAMPLE_THRESHOLD = 50 * 1024 * 1024;
@@ -41,12 +40,19 @@ function buildPlan(
   maxDimension: number | undefined,
   captured: { dims: SourceDimensions | null },
 ): (dims: SourceDimensions) => EncodePlan {
-  const mimeType = selectOutputMime(imageSourceFormat(file.type, file.name), profile.convertFormat);
+  const mimeType = selectOutputMime(
+    imageSourceFormat(file.type, file.name),
+    profile.convertFormat,
+    profile.level,
+  );
   const quality = qualityToUnit(profile.imageQuality);
   return (dims) => {
     captured.dims = dims;
     const target = computeTargetDimensions(dims, maxDimension);
-    return { targetWidth: target.width, targetHeight: target.height, mimeType, quality };
+    const base = { targetWidth: target.width, targetHeight: target.height, mimeType };
+    // A png output is lossless (Oxipng): omit quality so codecs take their
+    // lossless path instead of a meaningless lossy parameter.
+    return mimeType === "image/png" ? base : { ...base, quality };
   };
 }
 

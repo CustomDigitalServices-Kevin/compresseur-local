@@ -1,4 +1,4 @@
-import type { ConvertFormat } from "../../core/types";
+import type { CompressionLevel, ConvertFormat } from "../../core/types";
 import type { SourceDimensions } from "./raster-codec";
 
 // Pure decision helpers for the image engine: quality mapping, resize math,
@@ -42,18 +42,28 @@ export function imageSourceFormat(mime: string, fileName: string): ImageSourceFo
 }
 
 /**
- * Picks the output MIME type. An explicit convertFormat always wins; otherwise
- * jpeg and webp keep their own format, and everything else (png/avif/unknown)
- * becomes lossy WebP -- the baseline engine's way to actually shrink a PNG
- * while preserving alpha. Proper lossless PNG optimization arrives in T2.
+ * Picks the output MIME type. An explicit convertFormat always wins. Without
+ * one, the engine re-encodes into the SOURCE format (jpeg -> jpeg, webp ->
+ * webp, avif -> avif) with one documented exception, the PNG mapping:
+ *
+ *   - png at "light"               -> image/png  (lossless Oxipng optimization:
+ *     pixels untouched, only the encoding shrinks)
+ *   - png at "balanced"/"maximum"  -> image/webp (lossy WebP, preserves alpha;
+ *     a lossy re-encode of a PNG back INTO png would usually grow the file, so
+ *     the stronger levels switch container to actually gain bytes)
+ *
+ * Unknown raster formats also become lossy WebP, the alpha-safe default.
  */
 export function selectOutputMime(
   source: ImageSourceFormat,
   convert: ConvertFormat | undefined,
+  level: CompressionLevel,
 ): string {
   if (convert !== undefined) return MIME_BY_CONVERT[convert];
   if (source === "jpeg") return "image/jpeg";
   if (source === "webp") return "image/webp";
+  if (source === "avif") return "image/avif";
+  if (source === "png") return level === "light" ? "image/png" : "image/webp";
   return "image/webp";
 }
 

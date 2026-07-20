@@ -4,11 +4,11 @@ import type { EncodePlan, RasterCodec, SourceDimensions } from "./raster-codec";
 import type { CompressionProfile } from "../../core/types";
 import { computeGain, extrapolateByArea } from "./plan";
 
-// A deterministic stand-in for OffscreenCanvas: it models a real encoder well
+// A deterministic stand-in for the pixel codec: it models a real encoder well
 // enough to test the ENGINE's orchestration (resize decision, quality mapping,
 // gain math, sampling extrapolation) without pixels. happy-dom cannot encode
 // (getContext('2d') is null, convertToBlob returns 0 bytes), so the pixel-level
-// "PNG really becomes a smaller JPEG" guarantee is proven by the browser E2E
+// "PNG really becomes a smaller file" guarantee is proven by the browser E2E
 // suite (T5), exactly as the convertisseur does for its canvas.ts.
 function fakeCodec(
   source: SourceDimensions,
@@ -38,7 +38,7 @@ function fileOf(sizeBytes: number, name: string, type: string): File {
 const maximum: CompressionProfile = { level: "maximum", imageQuality: 55, maxDimension: 1920 };
 const light: CompressionProfile = { level: "light", imageQuality: 85 };
 
-describe("baseline image engine (compress)", () => {
+describe("image engine (compress)", () => {
   it("really shrinks a source file and reports the gain", async () => {
     const { codec, plans } = fakeCodec({ width: 800, height: 600 });
     const engine = createImageEngine({ codec });
@@ -89,9 +89,29 @@ describe("baseline image engine (compress)", () => {
     });
     expect(plans[0]?.mimeType).toBe("image/webp");
   });
+
+  it("plans a lossless png output (no quality) for a png source at light", async () => {
+    const { codec, plans } = fakeCodec({ width: 100, height: 100 });
+    const engine = createImageEngine({ codec });
+    await engine.compress(fileOf(50_000, "icon.png", "image/png"), light);
+    expect(plans[0]?.mimeType).toBe("image/png");
+    expect(plans[0]?.quality).toBeUndefined();
+  });
+
+  it("plans a lossy webp output for a png source at the stronger levels", async () => {
+    const { codec, plans } = fakeCodec({ width: 100, height: 100 });
+    const engine = createImageEngine({ codec });
+    await engine.compress(fileOf(50_000, "icon.png", "image/png"), {
+      level: "balanced",
+      imageQuality: 75,
+      maxDimension: 2560,
+    });
+    expect(plans[0]?.mimeType).toBe("image/webp");
+    expect(plans[0]?.quality).toBeCloseTo(0.75);
+  });
 });
 
-describe("baseline image engine (estimate)", () => {
+describe("image engine (estimate)", () => {
   it("returns an exact result for files under the threshold", async () => {
     const { codec } = fakeCodec({ width: 800, height: 600 });
     const engine = createImageEngine({ codec });
