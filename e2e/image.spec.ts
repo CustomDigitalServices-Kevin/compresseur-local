@@ -29,6 +29,7 @@ test.describe("image compression", () => {
     );
 
     expect(sniffFormat(output.bytes)).toBe("jpeg");
+    expect(output.name).toBe("photo-min.jpg");
     expect(output.bytes.length).toBeLessThan(before);
     expect(gain).toBeGreaterThan(0);
 
@@ -54,8 +55,10 @@ test.describe("image compression", () => {
       `[e2e] PNG maximum: ${String(before)} -> ${String(output.bytes.length)} bytes (${gain.toFixed(1)}% gain), name=${output.name}, format=${format}`,
     );
 
-    // PNG at maximum is re-encoded to lossy WebP (plan.ts selectOutputMime).
+    // PNG at maximum is re-encoded to lossy WebP (plan.ts selectOutputMime),
+    // so the download must be named .webp -- not .png with WebP bytes inside.
     expect(format).toBe("webp");
+    expect(output.name).toBe("photo-min.webp");
     expect(output.bytes.length).toBeLessThan(before);
     expect(gain).toBeGreaterThan(0);
 
@@ -80,6 +83,7 @@ test.describe("image compression", () => {
     );
 
     expect(sniffFormat(output.bytes)).toBe("png");
+    expect(output.name).toBe("photo-min.png");
     const decoded = await decodeInBrowser(page, output.bytes);
     // Lossless path: full resolution preserved.
     expect(decoded.width).toBe(2400);

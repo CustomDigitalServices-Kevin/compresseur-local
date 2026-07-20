@@ -27,13 +27,16 @@ export function unknownFile(name = "notes.txt"): File {
 export function resultOf(
   bytesBefore: number,
   bytesAfter: number,
-  options: { isEstimate?: boolean; sampled?: boolean } = {},
+  options: { isEstimate?: boolean; sampled?: boolean; mimeType?: string } = {},
 ): CompressionResult {
   return {
     bytesBefore,
     bytesAfter,
     gainPercent: ((bytesBefore - bytesAfter) / bytesBefore) * 100,
-    blob: new Blob([new Uint8Array(bytesAfter)], { type: "image/png" }),
+    // The real contract: worker-bridge rebuilds the blob with the MIME type the
+    // engine produced, and that type is what names the download. Fakes must
+    // carry it too, otherwise they cannot exercise the naming path.
+    blob: new Blob([new Uint8Array(bytesAfter)], { type: options.mimeType ?? "image/png" }),
     isEstimate: options.isEstimate ?? false,
     sampled: options.sampled ?? false,
   };
@@ -68,7 +71,24 @@ export function fakeRunner(
 }
 
 /** Runner whose output size shrinks with the level, all estimates exact. */
+const FAKE_MIME_BY_CONVERT = {
+  webp: "image/webp",
+  avif: "image/avif",
+  jpeg: "image/jpeg",
+} as const;
+
 export function levelSizedRunner(bytesBefore = 4000): FakeRunner {
   const byLevel = { light: 3000, balanced: 2000, maximum: 1000 } as const;
-  return fakeRunner((input) => Promise.resolve(resultOf(bytesBefore, byLevel[input.level])));
+  return fakeRunner((input) =>
+    Promise.resolve(
+      resultOf(bytesBefore, byLevel[input.level], {
+        // Same rule as the image engine: an explicit convertFormat decides the
+        // output MIME, otherwise the source format (PNG here) is kept.
+        mimeType:
+          input.profile.convertFormat === undefined
+            ? "image/png"
+            : FAKE_MIME_BY_CONVERT[input.profile.convertFormat],
+      }),
+    ),
+  );
 }

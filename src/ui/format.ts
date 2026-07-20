@@ -1,4 +1,4 @@
-import type { CompressionFamily, ConvertFormat } from "../core/types";
+import type { CompressionFamily } from "../core/types";
 import type { Locale } from "../i18n/messages";
 
 const UNITS: Record<Locale, readonly string[]> = {
@@ -33,24 +33,33 @@ export function formatGain(gainPercent: number, locale: Locale): string {
   return rounded === 0 ? `0${suffix}` : `-${String(rounded)}${suffix}`;
 }
 
+const IMAGE_EXTENSION_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/avif": "avif",
+};
+
 /**
  * Output file name: the original stem plus a "-min" marker (locale-neutral) so
- * the download never silently overwrites the source file. When the advanced
- * settings convert images to another format, the extension follows.
+ * the download never silently overwrites the source file.
+ *
+ * The extension is derived from the MIME type the engine ACTUALLY produced, not
+ * from the request: the image engine re-encodes a PNG to WebP at the balanced
+ * and maximum levels (plan.ts selectOutputMime), so keying off the source name
+ * shipped WebP bytes named ".png" -- a file some viewers refuse to open (caught
+ * by the E2E image spec, 2026-07-20). Non-image families keep their extension:
+ * their engines preserve the container.
  */
 export function outputFileName(
   originalName: string,
   family: CompressionFamily | null,
-  convertFormat: ConvertFormat | null,
+  outputMimeType: string,
 ): string {
   const dot = originalName.lastIndexOf(".");
   const stem = dot <= 0 ? originalName : originalName.slice(0, dot);
   const originalExt = dot <= 0 ? "" : originalName.slice(dot + 1);
   const ext =
-    family === "image" && convertFormat !== null
-      ? convertFormat === "jpeg"
-        ? "jpg"
-        : convertFormat
-      : originalExt;
+    family === "image" ? (IMAGE_EXTENSION_BY_MIME[outputMimeType] ?? originalExt) : originalExt;
   return ext === "" ? `${stem}-min` : `${stem}-min.${ext}`;
 }

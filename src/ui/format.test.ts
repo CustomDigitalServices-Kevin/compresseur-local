@@ -30,21 +30,27 @@ describe("formatGain", () => {
 });
 
 describe("outputFileName", () => {
-  it("suffixes the stem and keeps the original extension", () => {
-    expect(outputFileName("photo.png", "image", null)).toBe("photo-min.png");
-    expect(outputFileName("rapport.pdf", "pdf", null)).toBe("rapport-min.pdf");
+  it("suffixes the stem and keeps the extension when the format is unchanged", () => {
+    expect(outputFileName("photo.png", "image", "image/png")).toBe("photo-min.png");
+    expect(outputFileName("rapport.pdf", "pdf", "application/pdf")).toBe("rapport-min.pdf");
   });
 
-  it("follows the converted image format, mapping jpeg to jpg", () => {
-    expect(outputFileName("photo.png", "image", "webp")).toBe("photo-min.webp");
-    expect(outputFileName("photo.png", "image", "jpeg")).toBe("photo-min.jpg");
+  it("follows the format the engine actually produced, mapping jpeg to jpg", () => {
+    // A PNG re-encoded to WebP (balanced/maximum) must NOT keep the .png name.
+    expect(outputFileName("photo.png", "image", "image/webp")).toBe("photo-min.webp");
+    expect(outputFileName("photo.png", "image", "image/jpeg")).toBe("photo-min.jpg");
+    expect(outputFileName("photo.png", "image", "image/avif")).toBe("photo-min.avif");
   });
 
-  it("ignores the image conversion for non-image families", () => {
-    expect(outputFileName("note.docx", "office", "webp")).toBe("note-min.docx");
+  it("keeps the original extension for non-image families", () => {
+    expect(outputFileName("note.docx", "office", "application/zip")).toBe("note-min.docx");
+  });
+
+  it("falls back to the original extension for an unknown image MIME type", () => {
+    expect(outputFileName("photo.png", "image", "")).toBe("photo-min.png");
   });
 
   it("handles names without an extension", () => {
-    expect(outputFileName("archive", null, null)).toBe("archive-min");
+    expect(outputFileName("archive", null, "")).toBe("archive-min");
   });
 });

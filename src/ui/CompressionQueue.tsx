@@ -190,7 +190,7 @@ export function CompressionQueue({ runner }: CompressionQueueProps = {}): ReactE
           const name = outputFileName(
             item.file.name,
             item.detected?.family ?? null,
-            overridesRef.current.convertFormat,
+            result.blob.type,
           );
           downloadBlob(result.blob, name);
           patchItem(item.id, { status: "done" });
@@ -226,7 +226,7 @@ export function CompressionQueue({ runner }: CompressionQueueProps = {}): ReactE
         const name = outputFileName(
           item.file.name,
           item.detected?.family ?? null,
-          overridesRef.current.convertFormat,
+          result.blob.type,
         );
         const data = new Uint8Array(await result.blob.arrayBuffer());
         return { name, data };
