@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "check:licenses": "node scripts/check-licenses.mjs"
+    "check:licenses": "node scripts/check-licenses.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@jspawn/qpdf-wasm": "^0.0.2",

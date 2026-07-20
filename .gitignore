@@ -1,8 +1,10 @@
 node_modules/
 dist/
+dev-dist/
 *.log
 .env
 .env.*
-
-# Worktrees d agents (orchestration)
+playwright-report/
+test-results/
+e2e/.fixtures/
 .claude/worktrees/
