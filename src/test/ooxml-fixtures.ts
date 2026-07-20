@@ -155,8 +155,9 @@ export function buildOoxml(kind: OoxmlKind, options: OoxmlFixtureOptions = {}): 
     pptx: "ppt/presentation.xml",
     xlsx: "xl/workbook.xml",
   };
-  parts["_rels/.rels"] =
-    strToU8(`${XML_HEADER}<Relationships xmlns="${REL_NS}"><Relationship Id="rId1" Type="${OFFICE_REL}/officeDocument" Target="${mainPart[kind]}"/></Relationships>`);
+  parts["_rels/.rels"] = strToU8(
+    `${XML_HEADER}<Relationships xmlns="${REL_NS}"><Relationship Id="rId1" Type="${OFFICE_REL}/officeDocument" Target="${mainPart[kind]}"/></Relationships>`,
+  );
 
   for (const [path, xml] of Object.entries(contentPartsOf(kind))) {
     parts[path] = strToU8(xml);
@@ -169,8 +170,9 @@ export function buildOoxml(kind: OoxmlKind, options: OoxmlFixtureOptions = {}): 
     parts["ppt/slides/_rels/slide1.xml.rels"] = strToU8(mediaRels(mediaNames, "../media/"));
     for (const [name, bytes] of Object.entries(media)) parts[`ppt/media/${name}`] = bytes;
   } else {
-    parts["xl/drawings/drawing1.xml"] =
-      strToU8(`${XML_HEADER}<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"/>`);
+    parts["xl/drawings/drawing1.xml"] = strToU8(
+      `${XML_HEADER}<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"/>`,
+    );
     parts["xl/drawings/_rels/drawing1.xml.rels"] = strToU8(mediaRels(mediaNames, "../media/"));
     for (const [name, bytes] of Object.entries(media)) parts[`xl/media/${name}`] = bytes;
   }

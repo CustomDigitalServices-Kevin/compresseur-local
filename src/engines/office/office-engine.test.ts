@@ -137,7 +137,9 @@ describe("office engine (compress)", () => {
 
   it("copies non-image media through intact", async () => {
     const emf = fakeBinary(5_000);
-    const input = buildOoxml("pptx", { media: { "diagram1.emf": emf, "image1.jpeg": fakeJpeg(20_000) } });
+    const input = buildOoxml("pptx", {
+      media: { "diagram1.emf": emf, "image1.jpeg": fakeJpeg(20_000) },
+    });
     const result = await createOfficeEngine({ codec: fakeCodec().codec }).compress(
       ooxmlFile("pptx", input),
       maximum,
@@ -204,7 +206,11 @@ describe("office engine (compress)", () => {
 });
 
 describe("office engine (estimate)", () => {
-  function manyJpegsDocx(count: number): { file: File; totalMediaBytes: number; topBytes: number[] } {
+  function manyJpegsDocx(count: number): {
+    file: File;
+    totalMediaBytes: number;
+    topBytes: number[];
+  } {
     const media: Record<string, Uint8Array> = {};
     const sizes: number[] = [];
     for (let i = 0; i < count; i++) {

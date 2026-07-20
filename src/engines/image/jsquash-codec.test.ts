@@ -34,10 +34,11 @@ interface RecordedCalls {
   resizes: Array<{ width: number; height: number }>;
 }
 
-function fakeSetup(options?: {
-  nativeDecodeFails?: boolean;
-  sourceDims?: SourceDimensions;
-}): { loaders: CodecLoaders; pixels: PixelOps; calls: RecordedCalls } {
+function fakeSetup(options?: { nativeDecodeFails?: boolean; sourceDims?: SourceDimensions }): {
+  loaders: CodecLoaders;
+  pixels: PixelOps;
+  calls: RecordedCalls;
+} {
   const dims = options?.sourceDims ?? { width: 8, height: 6 };
   const calls: RecordedCalls = {
     encodes: [],

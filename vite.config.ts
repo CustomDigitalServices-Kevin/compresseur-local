@@ -76,5 +76,10 @@ export default defineConfig({
   },
   worker: {
     format: "es",
+    // The worker bundle runs through its own plugin pipeline: the plugins above
+    // do NOT apply to it. Since the codecs are imported from the worker, the
+    // AVIF redirect has to be repeated here, otherwise the ~3.5 MB multi-thread
+    // encoder lands back in dist/ and in the PWA precache.
+    plugins: () => [forceSingleThreadAvif()],
   },
 });

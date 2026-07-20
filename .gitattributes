@@ -1,0 +1,7 @@
+# Normalize line endings so prettier --check passes identically on Windows
+# checkouts, Linux CI and the deploy runner.
+* text=auto eol=lf
+*.wasm binary
+*.png binary
+*.jpg binary
+*.pdf binary

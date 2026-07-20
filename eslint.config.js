@@ -4,7 +4,9 @@ import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 
 export default tseslint.config(
-  { ignores: ["dist", "node_modules"] },
+  // .claude/worktrees holds agent worktrees: full checkouts of this same repo.
+  // Without this, every source file gets linted once per worktree.
+  { ignores: ["dist", "node_modules", ".claude/worktrees"] },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [js.configs.recommended, ...tseslint.configs.strictTypeChecked],

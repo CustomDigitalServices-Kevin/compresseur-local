@@ -98,8 +98,12 @@ describe("resolveRelsTarget", () => {
   });
 
   it("returns null for external targets", () => {
-    expect(resolveRelsTarget("word/_rels/document.xml.rels", "https://example.com/x.png")).toBeNull();
-    expect(resolveRelsTarget("word/_rels/document.xml.rels", "mailto:kevin@example.com")).toBeNull();
+    expect(
+      resolveRelsTarget("word/_rels/document.xml.rels", "https://example.com/x.png"),
+    ).toBeNull();
+    expect(
+      resolveRelsTarget("word/_rels/document.xml.rels", "mailto:kevin@example.com"),
+    ).toBeNull();
   });
 });
 
@@ -165,7 +169,9 @@ describe("rewriteContentTypes", () => {
       '<Override PartName="/word/media/image1.png" ContentType="image/png"/></Types>',
     );
     const rewritten = rewriteContentTypes(withOverride, [RENAME]);
-    expect(rewritten).toContain('<Override PartName="/word/media/image1.jpeg" ContentType="image/jpeg"/>');
+    expect(rewritten).toContain(
+      '<Override PartName="/word/media/image1.jpeg" ContentType="image/jpeg"/>',
+    );
     expect(rewritten).not.toContain('PartName="/word/media/image1.png"');
   });
 
