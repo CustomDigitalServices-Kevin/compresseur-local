@@ -3,8 +3,8 @@
 // table against package.json "dependencies" in both directions: adding a
 // runtime dependency without listing it here, or leaving a stale entry, fails
 // CI. `covers` maps a display row to the package names it credits. (Pattern D14
-// from the convertisseur.) T2-T4 add rows here as they bring in @jsquash,
-// pdfjs-dist, pdf-lib, fflate, etc.
+// from the convertisseur.) T2-T3 add rows here as they bring in @jsquash,
+// pdfjs-dist, pdf-lib, etc.
 export interface RuntimeLicenseEntry {
   name: string;
   license: string;
@@ -13,4 +13,5 @@ export interface RuntimeLicenseEntry {
 
 export const RUNTIME_LICENSES: readonly RuntimeLicenseEntry[] = [
   { name: "react / react-dom", license: "MIT", covers: ["react", "react-dom"] },
+  { name: "fflate", license: "MIT", covers: ["fflate"] },
 ];
