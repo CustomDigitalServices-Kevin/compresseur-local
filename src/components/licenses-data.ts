@@ -6,6 +6,7 @@
 // from the convertisseur.) T3-T4 add rows here as they bring in pdfjs-dist,
 // pdf-lib, fflate, etc.
 // from the convertisseur.) T2-T3 add rows here as they bring in @jsquash,
+// from the convertisseur.) T2-T4 add rows here as they bring in @jsquash,
 // pdfjs-dist, pdf-lib, etc.
 export interface RuntimeLicenseEntry {
   name: string;
