@@ -45,6 +45,7 @@ const fr = {
   "card.download": "Télécharger",
   "card.remove": "Retirer",
   "card.done": "Terminé",
+  "card.levelLegend": "Niveau de compression",
 
   "status.estimating": "Estimation des gains en cours",
   "status.ready": "Estimation terminée, choisissez un niveau",
@@ -83,7 +84,8 @@ const fr = {
   "trust.offline.body":
     "Après le premier chargement, compressez en avion : les moteurs sont mis en cache sur votre appareil.",
   "trust.opensource.title": "Open source (MIT)",
-  "trust.opensource.body": "Code auditable sur GitHub. Aucun tracker, aucun cookie, aucune inscription.",
+  "trust.opensource.body":
+    "Code auditable sur GitHub. Aucun tracker, aucun cookie, aucune inscription.",
 
   "privacy.title": "Pourquoi 100% local",
   "privacy.back": "Retour à l'accueil",
@@ -129,7 +131,8 @@ const en: Record<MessageKey, string> = {
   "dropzone.browseLabel": "Browse files to compress",
 
   "queue.title": "Compression queue",
-  "queue.empty": "No files yet. Per-level savings appear as soon as you drop a file, before any download.",
+  "queue.empty":
+    "No files yet. Per-level savings appear as soon as you drop a file, before any download.",
   "queue.globalLevelLabel": "Level for all files",
   "queue.downloadAllZip": "Download all (ZIP)",
   "queue.zipWorking": "Preparing ZIP...",
@@ -150,6 +153,7 @@ const en: Record<MessageKey, string> = {
   "card.download": "Download",
   "card.remove": "Remove",
   "card.done": "Done",
+  "card.levelLegend": "Compression level",
 
   "status.estimating": "Estimating savings",
   "status.ready": "Estimates ready, pick a level",
