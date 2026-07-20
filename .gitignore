@@ -3,3 +3,6 @@ dist/
 *.log
 .env
 .env.*
+
+# Worktrees d agents (orchestration)
+.claude/worktrees/
