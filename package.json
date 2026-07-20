@@ -18,6 +18,11 @@
     "check:licenses": "node scripts/check-licenses.mjs"
   },
   "dependencies": {
+    "@jsquash/avif": "^2.1.1",
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@jsquash/png": "^3.1.1",
+    "@jsquash/webp": "^1.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
