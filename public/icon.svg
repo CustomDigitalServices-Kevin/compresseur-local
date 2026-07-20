@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Compresseur local">
+  <rect width="512" height="512" rx="112" fill="#0b0b0d" />
+  <rect x="128" y="96" width="256" height="96" rx="28" fill="#ff6b00" />
+  <rect x="168" y="232" width="176" height="56" rx="24" fill="#ff8c33" />
+  <rect x="200" y="328" width="112" height="40" rx="18" fill="#ffb066" />
+  <path d="M256 392 L300 436 L212 436 Z" fill="#ff6b00" />
+</svg>

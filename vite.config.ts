@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import type { Plugin } from "vite";
 import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
 
 // Strict CSP injected at build time only (the dev server needs inline scripts
 // for HMR). connect-src 'self' is the technical enforcement of the "no upload"
@@ -9,7 +10,10 @@ import react from "@vitejs/plugin-react";
 const CSP = [
   "default-src 'none'",
   "script-src 'self' 'wasm-unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
+  // No component ever sets an inline style attribute (see the CSP note at the
+  // top of index.css and the D9 comment in FileCard.tsx), so no 'unsafe-inline'
+  // and no style-src-attr are needed: everything comes from the stylesheet.
+  "style-src 'self'",
   "img-src 'self' blob: data:",
   "worker-src 'self' blob:",
   "connect-src 'self'",
@@ -65,11 +69,63 @@ function forceSingleThreadAvif(): Plugin {
   };
 }
 
+/**
+ * Offline PWA. The precache is deliberately limited to the app shell (HTML,
+ * CSS and every JS chunk): the heavy binaries are cached at RUNTIME instead.
+ *
+ * Why: dist/ weighs ~11 MB, dominated by four assets that most visitors never
+ * need (avif_enc 3.4 MB and avif_dec 1.1 MB only matter when AVIF is chosen or
+ * dropped, pdf.worker 2.3 MB and qpdf 1.2 MB only for PDFs). Precaching them
+ * would push ~11 MB onto every first visit. With this split the install
+ * payload is the shell only, and each codec is cached the first time it is
+ * actually used -- after which that family keeps working offline.
+ *
+ * maximumFileSizeToCacheInBytes stays at the 2 MiB default on purpose: it is a
+ * regression alarm. If a future change lets a multi-megabyte asset match
+ * globPatterns, the build fails loudly instead of silently bloating the
+ * precache (RAG pwa-vite-plugin-pwa, convertisseur 2026-07-18).
+ */
+function pwa(): Plugin[] {
+  return VitePWA({
+    registerType: "autoUpdate",
+    // External registerSW.js rather than an inline script: keeps the strict
+    // CSP (script-src 'self') intact.
+    injectRegister: "script-defer",
+    includeAssets: ["icon.svg"],
+    workbox: {
+      // Shell only. Note .wasm and .mjs are absent by design (see above).
+      globPatterns: ["**/*.{js,css,html}"],
+      runtimeCaching: [
+        {
+          // Content-hashed and immutable, so CacheFirst is safe: a rebuild
+          // produces a new filename rather than mutating this one.
+          urlPattern: /\.(?:wasm|mjs)$/,
+          handler: "CacheFirst",
+          options: {
+            cacheName: "compresseur-codecs",
+            expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+      ],
+    },
+    manifest: {
+      name: "Compresseur local",
+      short_name: "Compresseur",
+      description: "Compress images, PDF and Office files entirely in your browser. No upload.",
+      theme_color: "#ff6b00",
+      background_color: "#0b0b0d",
+      display: "standalone",
+      icons: [{ src: "icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+    },
+  });
+}
+
 // Deployed under /outils/compresseur/ on the CDS site; base must stay relative
 // so the same build also works on GitHub Pages or a local preview.
 export default defineConfig({
   base: "./",
-  plugins: [react(), injectCsp(), forceSingleThreadAvif()],
+  plugins: [react(), injectCsp(), forceSingleThreadAvif(), pwa()],
   build: {
     target: "es2022",
     sourcemap: false,
