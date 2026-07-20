@@ -5,6 +5,8 @@
 // CI. `covers` maps a display row to the package names it credits. (Pattern D14
 // from the convertisseur.) T3-T4 add rows here as they bring in pdfjs-dist,
 // pdf-lib, fflate, etc.
+// from the convertisseur.) T2-T3 add rows here as they bring in @jsquash,
+// pdfjs-dist, pdf-lib, etc.
 export interface RuntimeLicenseEntry {
   name: string;
   license: string;
@@ -23,4 +25,5 @@ export const RUNTIME_LICENSES: readonly RuntimeLicenseEntry[] = [
     license: "Apache-2.0",
     covers: ["@jsquash/jpeg", "@jsquash/png", "@jsquash/webp", "@jsquash/avif", "@jsquash/oxipng"],
   },
+  { name: "fflate", license: "MIT", covers: ["fflate"] },
 ];
