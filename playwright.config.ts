@@ -2,8 +2,12 @@ import { defineConfig } from "@playwright/test";
 
 // The E2E suite runs against the PRODUCTION build served statically: that is
 // the only configuration where the strict CSP, the code-split WASM chunks and
-// the service worker all behave like they will in production. `npm run preview`
-// serves dist/ on 4173.
+// the service worker all behave like they will in production.
+//
+// It serves dist/ with scripts/serve-dist.mjs rather than `vite preview`: an
+// editor extension attached to the Vite process injected an instrumentation
+// script into the served HTML (71 KB served vs 1 KB built), so the suite was
+// not testing the real bundle. See the comment in that script.
 export default defineConfig({
   testDir: "./e2e",
   // Compression is CPU-bound and the WASM codecs are memory-hungry; running
@@ -19,7 +23,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "npm run preview",
+    command: "npm run serve:dist",
     url: "http://localhost:4173",
     reuseExistingServer: process.env["CI"] === undefined,
     timeout: 120_000,

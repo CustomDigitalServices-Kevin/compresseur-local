@@ -16,7 +16,8 @@
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "check:licenses": "node scripts/check-licenses.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "serve:dist": "node scripts/serve-dist.mjs"
   },
   "dependencies": {
     "@jspawn/qpdf-wasm": "^0.0.2",
