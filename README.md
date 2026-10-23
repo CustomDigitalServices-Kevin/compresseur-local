@@ -81,3 +81,8 @@ This project is MIT licensed (see `LICENSE`).
 AGPL and bundled LGPL dependencies are forbidden: `npm run check:licenses` enforces an allowlist across the whole dependency tree, and the in-app "Third-party licenses" page is locked against `package.json` by a test. Every bundled library is MIT, Apache-2.0 or BSD.
 
 Notably, PDF compression avoids Ghostscript and MuPDF (both AGPL), which is what most "strong" online PDF compressors are built on. It uses qpdf (Apache-2.0), pdf-lib (MIT) and pdf.js (Apache-2.0) instead.
+
+## About
+
+Built and maintained by [Kevin Tomas](https://www.custom-digital-services.com/?utm_source=github&utm_medium=readme&utm_campaign=compresseur-local), freelance Power Platform and Microsoft AI consultant (Custom Digital Services).
+Try it online: [www.custom-digital-services.com/outils/compresseur](https://www.custom-digital-services.com/outils/compresseur/?utm_source=github&utm_medium=readme&utm_campaign=compresseur-local). More free tools: [www.custom-digital-services.com/outils](https://www.custom-digital-services.com/outils/?utm_source=github&utm_medium=readme&utm_campaign=compresseur-local)
